@@ -114,6 +114,27 @@
     <button id="addFoodBtn" onclick="searchFood()">Add Food</button>
   </div>
 
+  <!-- Custom Food -->
+  <div class="card">
+    <h2>Add Custom Food</h2>
+    <label>Food Name: <input type="text" id="customName"></label>
+    <label>Calories: <input type="number" id="customCalories"></label>
+    <label>Protein (g): <input type="number" id="customProtein"></label>
+    <label>Carbs (g): <input type="number" id="customCarbs"></label>
+    <label>Fat (g): <input type="number" id="customFat"></label>
+    <label>Fiber (g): <input type="number" id="customFiber"></label>
+    <button onclick="addCustomFood()">Add Custom Food</button>
+  </div>
+
+  <!-- Water Tracker -->
+  <div class="card">
+    <h2>💧 Water Intake</h2>
+    <label>Amount (ml): <input type="number" id="waterInput" placeholder="e.g. 250"></label>
+    <button onclick="addWater()">Add Water</button>
+    <button onclick="resetWater()">Reset</button>
+    <div id="waterProgress">Total: 0 ml</div>
+  </div>
+
   <!-- Progress -->
   <div class="card">
     <h2>Progress</h2>
@@ -141,6 +162,7 @@
 <script>
 let goals = {calories:0, protein:0, carbs:0, fat:0, fiber:0};
 let consumed = {calories:0, protein:0, carbs:0, fat:0, fiber:0};
+let water = 0;
 
 const APP_ID = "771ea150";   // Replace with your App ID
 const API_KEY = "941908eba34b6154cae788daf378e359"; // Replace with your API Key
@@ -154,6 +176,12 @@ window.onload = () => {
   if(storedLog){
     const logArray = JSON.parse(storedLog);
     logArray.forEach(food => addToLog(food, false));
+  }
+
+  const storedWater = localStorage.getItem('water');
+  if(storedWater) {
+    water = parseInt(storedWater);
+    updateWater();
   }
 
   updateProgress();
@@ -205,7 +233,6 @@ async function searchFood(){
     });
 
     const data = await response.json();
-    console.log("API response:", data);
 
     if(data.foods && data.foods.length > 0){
       const f = data.foods[0];
@@ -233,6 +260,29 @@ async function searchFood(){
     console.error("Error:", err);
     alert("Error fetching nutrition info. Check console.");
   }
+}
+
+function addCustomFood(){
+  const foodItem = {
+    name: document.getElementById("customName").value || "Custom Food",
+    calories: parseInt(document.getElementById("customCalories").value) || 0,
+    protein: parseInt(document.getElementById("customProtein").value) || 0,
+    carbs: parseInt(document.getElementById("customCarbs").value) || 0,
+    fat: parseInt(document.getElementById("customFat").value) || 0,
+    fiber: parseInt(document.getElementById("customFiber").value) || 0
+  };
+
+  consumed.calories += foodItem.calories;
+  consumed.protein += foodItem.protein;
+  consumed.carbs += foodItem.carbs;
+  consumed.fat += foodItem.fat;
+  consumed.fiber += foodItem.fiber;
+
+  addToLog(foodItem);
+  updateProgress();
+
+  // clear inputs
+  document.querySelectorAll("#customName, #customCalories, #customProtein, #customCarbs, #customFat, #customFiber").forEach(el => el.value = "");
 }
 
 function addToLog(food, saveConsumed = true){
@@ -277,6 +327,24 @@ function resetLog(){
   localStorage.removeItem('foodLog');
   localStorage.removeItem('consumed');
   updateProgress();
+}
+
+// Water functions
+function addWater(){
+  const amount = parseInt(document.getElementById("waterInput").value);
+  if(!amount) return alert("Please enter water in ml");
+  water += amount;
+  localStorage.setItem('water', water);
+  updateWater();
+  document.getElementById("waterInput").value = "";
+}
+function resetWater(){
+  water = 0;
+  localStorage.removeItem('water');
+  updateWater();
+}
+function updateWater(){
+  document.getElementById("waterProgress").innerText = `Total: ${water} ml`;
 }
 </script>
 </body>
